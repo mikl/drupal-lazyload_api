@@ -1,0 +1,84 @@
+<?php
+/**
+ * @file
+ * Lazyload API module.
+ */
+
+/**
+ * Implements hook_hook_info().
+ */
+function lazyload_api_hook_info() {
+  return array(
+    'lazyload_api_content' => array(
+      'group' => 'lazyload_api',
+    ),
+  );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function lazyload_api_menu() {
+  $items = array();
+
+  $items['lazyload_api/bulk'] = array(
+    'page callback' => 'lazyload_api_pages_load_bulk',
+    'delivery callback' => 'drupal_json_output',
+    'type' => MENU_CALLBACK,
+    // No access check here, that is the individual module's
+    // responsibility.
+    'access callback' => TRUE,
+    'file' => 'lazyload_api.pages.inc',
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_library().
+ */
+function lazyload_api_library() {
+  $libraries = array();
+
+  $path = drupal_get_path('module', 'lazyload_api');
+
+  $libraries['lazyload_api'] = array(
+    'title'        => 'Lazyload API',
+    'version'      => '',
+    'dependencies' => array(
+      array('system', 'jquery'),
+    ),
+    'js' => array(
+      $path . '/js/lazyload_api.core.js' => array(),
+    ),
+  );
+
+  return $libraries;
+}
+
+/**
+ * Lazyload API placeholder.
+ *
+ * Returns a Drupal render API array with the placeholder for content to
+ * be lazy loaded.
+ *
+ * @param string $module
+ *   The module name that will provide the content.
+ *   This module will have its hook_lazyload_api_content() invoked
+ *   when the content needs to be generated.
+ * @param string $content_id
+ *   String identifying the content to be generated. This will be passed
+ *   back to hook_lazyload_api_content() at generation time.
+ *   This string will be passed through check_plain, so make sure it
+ *   doesn't contain any nasty stuff. Should conform to (A-Za-z0-9_-).
+ */
+function lazyload_api_placeholder($module, $content_id, $params = array()) {
+  $build = array();
+
+  $build['#attached']['library'][] = array('lazyload_api', 'lazyload_api');
+
+  $build[]['#markup'] = '<div class="lazyload-api-placeholder" data-module="' . check_plain($module) . '" data-content-id="' . check_plain($content_id) . '">pferd</div>';
+
+  return $build;
+}
