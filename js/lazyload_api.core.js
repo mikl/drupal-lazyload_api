@@ -14,47 +14,28 @@
     // The payload to send to the server to get our data back.
     var payload = {};
 
-    // Reference to all the elements, so we can put the content in the
-    // right place once the rendered output comes back from the server.
-    var placeholders = {};
-
+    // Collect all elements to lazy load.
     $('.lazyload-api-placeholder', context).each(function () {
       var elem = $(this);
       var moduleName = elem.data('module');
       var contentId = elem.data('content-id');
       var key = moduleName + concatenator + contentId;
-
       payload[key] = {
         module: moduleName,
         content_id: contentId
       };
-
-      placeholders[key] = elem;
     });
 
-    if (payload) {
-      $.ajax({
-        url: Drupal.settings.basePath + 'lazyload_api/bulk',
-        type: 'POST',
-        contentType: 'application/json',
+    var settings =  {
+      url: '/lazyload_api/bulk',
+      submit: {
+        payload: payload
+      }
+    };
 
-        data: JSON.stringify(payload),
-        dataType: 'json',
-        processData: false,
-
-        error: function (jqXHR, textStatus, errorThrown) {
-          // TODO: Handle errors.
-        },
-        success: function (data) {
-          $.each(data, function (key, value) {
-            // Replace the placeholder with the loaded elements.
-            if (placeholders[key]) {
-              placeholders[key].replaceWith($(value));
-            }
-          });
-        }
-      });
-    }
+    // Post the data to the backend using drupals ajax framework.
+    Drupal.ajax['lazyload_api'] = new Drupal.ajax('lazyload-api', context.body, settings);
+    Drupal.ajax['lazyload_api'].eventResponse(Drupal.ajax['lazyload_api']);
   };
 
   // Define a Drupal behavior, so we can run lazyload on all content
@@ -62,7 +43,9 @@
   // Will also run for the inital page load.
   Drupal.behaviors.lazyloadAPI = {
     attach: function (context, settings) {
-      lazyloadAll(context);
+      $(context.body).once('lazyloaded', function() {
+        lazyloadAll(context);
+      });
     }
   };
 

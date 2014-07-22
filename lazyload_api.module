@@ -23,7 +23,7 @@ function lazyload_api_menu() {
 
   $items['lazyload_api/bulk'] = array(
     'page callback' => 'lazyload_api_pages_load_bulk',
-    'delivery callback' => 'drupal_json_output',
+    'delivery callback' => 'ajax_deliver',
     'type' => MENU_CALLBACK,
     // No access check here, that is the individual module's
     // responsibility.
@@ -48,6 +48,7 @@ function lazyload_api_library() {
     'version'      => '',
     'dependencies' => array(
       array('system', 'jquery'),
+      array('system', 'drupal.ajax'),
     ),
     'js' => array(
       $path . '/js/lazyload_api.core.js' => array(),
@@ -77,8 +78,22 @@ function lazyload_api_placeholder($module, $content_id, $params = array()) {
   $build = array();
 
   $build['#attached']['library'][] = array('lazyload_api', 'lazyload_api');
-
-  $build[]['#markup'] = '<div class="lazyload-api-placeholder" data-module="' . check_plain($module) . '" data-content-id="' . check_plain($content_id) . '">pferd</div>';
+  $selector = lazyload_api_get_class_name($module, $content_id);
+  $build[]['#markup'] = '<div class="lazyload-api-placeholder ' . $selector . '" data-module="' . check_plain($module) . '" data-content-id="' . check_plain($content_id) . '">pferd</div>';
 
   return $build;
+}
+
+/**
+ * Returns a class name to identify a lazy loading placeholder.
+ *
+ * @param string $module
+ *   The module name that will provide the content.
+ * @param string $content_id
+ *   String identifying the content to be generated.
+ *
+ * @return string
+ */
+function lazyload_api_get_class_name($module, $content_id) {
+  return 'lazyload-' . check_plain($module) . '-' . check_plain($content_id);
 }
